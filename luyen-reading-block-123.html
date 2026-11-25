@@ -362,7 +362,7 @@ function vHome() {
     const done = tests.filter(t => P.tests[t.id]).length;
     return `<div class="card"><div class="range">${M.range} · ${esc(M.genre)}</div><h2>${M.name}</h2>
       <div class="count">${tests.length} bài · ${nq} câu · đã làm ${done}/${tests.length} · ${M.minutes} phút/bài</div>
-      <ol>${M.desc.map(d => "<li>" + esc(d) + "</li>").join("")}</ol>
+      
       <div class="row"><button class="btn" onclick="go('list',{block:${b},fSrc:'',fType:''})">Danh sách bài</button>
       <button class="btn ghost" onclick="go('practice',{block:${b},practice:null})">Luyện theo dạng</button></div></div>`;
   }).join("");
@@ -381,7 +381,7 @@ function vList() {
   if (S.fType) tests = tests.filter(t => t.questions.some(q => q.type === S.fType));
   const items = tests.map(t => {
     const p = P.tests[t.id];
-    const types = isT() ? `<div>${t.questions.map(q => `<span class="chip ${q.type === S.fType ? "hit" : ""}">${q.n}. ${esc(q.type)}</span>`).join("")}</div>` : "";
+    const types = "";
     return `<button class="item" onclick="openTest('${t.id}')"><span class="src">${esc(t.source)}</span>
       <span class="tt">${esc(t.title || "(Không tiêu đề)")}</span>
       <span class="meta">${t.questions.length} câu · ${M.range}${p ? ` · <span class="score-pill">Điểm cao nhất ${p.best}/10</span>` : ""}</span>${types}</button>`;
@@ -440,9 +440,9 @@ function questionHTML(t, q, ctx) {
     return `<div role="button" tabindex="0" class="opt ${c}${rv ? " dis" : ""}" data-t="${t.id}" data-n="${q.n}" data-i="${i}"><span class="L">${LET[i]}</span><span class="ot hlz" data-hk="o:${t.id}:${q.n}:${i}">${esc(o)}</span></div>`;
   }).join("");
   const showEx = rv || isT();
-  const ex = showEx ? `<details class="ex" ${rv && (a !== ki || instant()) ? "open" : ""}><summary>Giải thích chi tiết (4 tầng)</summary>${TIERS.map(([k, lb], i) => q.explain && q.explain[k] ? `<details class="tier" ${i === 0 ? "open" : ""}><summary>${i + 1}. ${lb}</summary><div class="tx">${md(q.explain[k])}</div></details>` : "").join("")}</details>` : "";
-  const ed = isT() && q.edited ? `<div class="edited"><b>Ghi chú chỉnh sửa:</b> ${md(q.edited)}</div>` : "";
-  const tag = isT() ? `<span class="tag">${esc(q.type)}</span>` : "";
+  const ex = showEx ? `<details class="ex" ${rv && (a !== ki || instant()) ? "open" : ""}><summary>Giải thích chi tiết</summary>${TIERS.map(([k, lb], i) => q.explain && q.explain[k] ? `<details class="tier" ${i === 0 ? "open" : ""}><summary>${i + 1}. ${lb}</summary><div class="tx">${md(q.explain[k])}</div></details>` : "").join("")}</details>` : "";
+  const ed = "";
+  const tag = "";
   const fb = rv && !S.done ? `<span class="tag ${a === ki ? "okk" : "nok"}">${a === ki ? "Đúng" : "Sai"}</span>` : "";
   return `<div class="q ${st}" id="q-${t.id}-${q.n}"><div class="qh"><span class="qn" data-jump="${t.id}-${q.n}">Question ${q.n}.</span><span>${fb} ${tag}</span></div>${ctx || ""}<div class="opts">${opts}</div>${ex}${ed}</div>`;
 }
@@ -652,7 +652,7 @@ function printDoc(kind) {
       h += t.questions.map(q => `<div class="pq"><b>Question ${q.n}.</b> ${q.options.map((o, i) => "<b>" + LET[i] + ".</b> " + esc(o)).join(t.block === 3 ? "<br>" : " &nbsp;&nbsp; ")}</div>`).join("");
     } else {
       h += `<p><b>Đáp án:</b> ${t.questions.map(q => q.n + q.key).join(" – ")}</p>`;
-      h += t.questions.map(q => `<div class="pq"><b>Question ${q.n}: ${q.key}</b> <i>(${esc(q.type)})</i>${TIERS.map(([k, lb]) => q.explain && q.explain[k] ? `<div class="pex"><b>${lb}:</b> ${md(q.explain[k])}</div>` : "").join("")}</div>`).join("");
+      h += t.questions.map(q => `<div class="pq"><b>Question ${q.n}: ${q.key}</b>${TIERS.map(([k, lb]) => q.explain && q.explain[k] ? `<div class="pex"><b>${lb}:</b> ${md(q.explain[k])}</div>` : "").join("")}</div>`).join("");
     }
     h += "</div>";
   });
