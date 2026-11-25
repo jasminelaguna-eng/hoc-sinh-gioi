@@ -81,7 +81,7 @@ table.grid thead th,table.fixes thead th{background:var(--tint);color:var(--navy
 table.grid td span{display:inline-block;min-width:2.6em}
 td.sn{font-weight:600;white-space:nowrap}
 td.c{white-space:nowrap;font-weight:700;color:var(--navy)}
-@media print{
+@media print_disabled{
   nav.tabs,.tools{display:none}
   body{background:#fff;color:#000;font-size:12.5pt}
   .set{break-inside:avoid-page;border:none;padding:0;margin:10mm 0}
@@ -101,7 +101,7 @@ td.c{white-space:nowrap;font-weight:700;color:var(--navy)}
 <header class="cover">
   <h1>BÀI TẬP BỔ TRỢ BLOCK 1,2,3</h1>
   <p>Chuyên đề Reading · HSG Tiếng Anh 12 · 13 bài mỗi block, trích từ Practice Test 1 và Test 01–12</p>
-  <p>Đã chỉnh theo ma trận Practice Test 1. Bấm chọn phương án, rồi bấm “Chấm bài” để xem kết quả.</p>
+  <p>Đã chỉnh theo ma trận Practice Test 1. Chế độ Luyện tập: chọn phương án rồi bấm “Chấm bài” để xem kết quả và giải thích. Chế độ Thi thử: làm bài có tính giờ, chấm điểm sau khi nộp.</p>
 </header>
 <nav class="tabs" aria-label="Mục lục">
   <a href="#b1">Block 1 · Câu 1–6</a><a href="#b2">Block 2 · Câu 7–12</a><a href="#b3">Block 3 · Câu 18–22</a>
@@ -2087,5 +2087,143 @@ document.addEventListener('click',function(e){
 var t=document.getElementById('toggleAll'),open=false;
 t.addEventListener('click',function(){open=!open;document.querySelectorAll('details.key').forEach(function(d){d.open=open});t.textContent=open?'Đóng tất cả đáp án':'Mở tất cả đáp án';});
 </script>
+<!-- ===== Hai chế độ: Luyện tập / Thi thử ===== -->
+<style>
+.set:not(.done) details.key{display:none}
+body.gv .set details.key{display:block}
+#toggleAll{display:none}body.gv #toggleAll{display:inline-block}
+#modeBar{font-family:Arial,Helvetica,sans-serif;display:flex;gap:0;margin:14px 0 0;border-bottom:2px solid #1c2a7a}
+#modeBar button{border:none;background:none;padding:9px 16px;font-weight:bold;font-size:15px;color:#5d6377;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:Arial}
+#modeBar button.on{color:#1c2a7a;border-bottom-color:#c8102e}
+#examBox{display:none;font-family:Arial,Helvetica,sans-serif;background:#fff;border:1px solid #dde0ea;border-top:none;border-radius:0 0 6px 6px;padding:16px;margin-bottom:10px}
+#examBox .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0}
+#examBox input,#examBox select{padding:6px 8px;border:1px solid #c9cde0;border-radius:4px;font-size:14px;font-family:Arial}
+#examBox .go{background:#c8102e;color:#fff;border:none;border-radius:4px;padding:8px 16px;font-weight:bold;cursor:pointer}
+#examBar{display:none;position:sticky;top:0;z-index:50;background:#1c2a7a;color:#fff;font-family:Arial;padding:8px 14px;border-radius:6px;margin:8px 0;align-items:center;gap:14px;flex-wrap:wrap}
+#examBar .t{font-size:20px;font-weight:bold;color:#ffd84d}
+#examBar button{background:#c8102e;color:#fff;border:none;border-radius:4px;padding:7px 14px;font-weight:bold;cursor:pointer}
+body.exam .set:not(.pick){display:none}
+body.exam #key,body.exam #fixes,body.exam nav.tabs,body.exam .set .tools{display:none}
+body.exam .block{padding-top:6px}
+body.exam .block:not(.hasPick){display:none}
+#examResult{display:none;font-family:Arial;background:#fff;border:2px solid #1c2a7a;border-radius:8px;padding:16px;margin:12px 0}
+#examResult .sc{font-size:36px;font-weight:bold;color:#c8102e}
+#examResult textarea{width:100%;height:110px;font-size:12px;margin-top:8px}
+</style>
+<script>
+(function(){
+  var cover=document.querySelector('header.cover'), nav=document.querySelector('nav.tabs');
+  var bar=document.createElement('div');bar.id='modeBar';
+  bar.innerHTML='<button type="button" data-m="p" class="on">Luyện tập</button><button type="button" data-m="e">Thi thử</button>';
+  var box=document.createElement('div');box.id='examBox';
+  box.innerHTML='<b style="color:#1c2a7a">Thi thử Reading</b><p style="margin:4px 0 8px;color:#5d6377;font-size:14px">Hệ thống chọn ngẫu nhiên các bài trong block. Đáp án chỉ hiện sau khi nộp bài; hết giờ tự nộp.</p>'+
+   '<div class="row"><label>Họ và tên <input id="exName" placeholder="Nhập họ tên"></label><label>Lớp <input id="exCls" value="12A10" style="width:80px"></label></div>'+
+   '<div class="row"><label>Phần thi <select id="exBlk"><option value="b1">Block 1 (câu 1–6)</option><option value="b2">Block 2 (câu 7–12)</option><option value="b3">Block 3 (câu 18–22)</option><option value="mix">Tổng hợp: mỗi block 1 bài (17 câu)</option></select></label>'+
+   '<label>Số bài <select id="exN"><option>1</option><option selected>2</option><option>3</option></select></label>'+
+   '<label>Thời gian <select id="exT"><option value="8">8 phút</option><option value="15" selected>15 phút</option><option value="20">20 phút</option><option value="30">30 phút</option></select></label>'+
+   '<button type="button" class="go" id="exGo">Bắt đầu thi thử</button></div><div id="exMsg" style="color:#c8102e;font-size:13px"></div>';
+  var ebar=document.createElement('div');ebar.id='examBar';
+  ebar.innerHTML='<span id="exWho"></span><span>Còn lại: <span class="t" id="exTime"></span></span><span id="exDone"></span><button type="button" id="exSub">Nộp bài thi thử</button>';
+  var res=document.createElement('div');res.id='examResult';
+  nav.parentNode.insertBefore(bar,nav);bar.after(box);box.after(ebar);ebar.after(res);
+  // practice: show key only after checking
+  document.addEventListener('click',function(e){var c=e.target.closest('.check');if(c&&!document.body.classList.contains('exam'))c.closest('.set').classList.add('done');
+    var r=e.target.closest('.reset');if(r)r.closest('.set').classList.remove('done');},true);
+  document.addEventListener('teacher-on',function(){document.body.classList.add('gv');});
+  if(window.__teacher)document.body.classList.add('gv');
+  var timer=null,end=0,start=0,picked=[];
+  function setMode(m){bar.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b.dataset.m===m);});
+    if(m==='p'){stop();document.body.classList.remove('exam');box.style.display='none';ebar.style.display='none';res.style.display='none';
+      document.querySelectorAll('.set').forEach(function(s){s.classList.remove('pick','done');});document.querySelectorAll('.block').forEach(function(b){b.classList.remove('hasPick');});}
+    else{box.style.display='block';}}
+  bar.onclick=function(e){var b=e.target.closest('button');if(b)setMode(b.dataset.m);};
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.random()*(i+1)|0;var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function clearSet(s){s.classList.remove('done');s.querySelectorAll('.opt').forEach(function(o){o.classList.remove('sel','right','wrong');o.disabled=false;});var sc=s.querySelector('.score');if(sc)sc.textContent='';}
+  document.getElementById('exGo').onclick=function(){
+    var nm=document.getElementById('exName').value.trim();if(!nm){document.getElementById('exMsg').textContent='Vui lòng nhập họ và tên.';return;}
+    document.getElementById('exMsg').textContent='';
+    var blk=document.getElementById('exBlk').value,n=+document.getElementById('exN').value;picked=[];
+    var blocks=blk==='mix'?['b1','b2','b3']:[blk];
+    blocks.forEach(function(b){var sets=shuffle(Array.from(document.querySelectorAll('#'+b+' .set')));picked=picked.concat(sets.slice(0,blk==='mix'?1:n));});
+    document.querySelectorAll('.set').forEach(function(s){s.classList.remove('pick');clearSet(s);});
+    document.querySelectorAll('.block').forEach(function(b){b.classList.remove('hasPick');});
+    picked.forEach(function(s){s.classList.add('pick');s.closest('.block').classList.add('hasPick');});
+    document.body.classList.add('exam');box.style.display='none';res.style.display='none';ebar.style.display='flex';
+    document.getElementById('exSub').dataset.c='';document.getElementById('exSub').textContent='Nộp bài thi thử';
+    document.getElementById('exWho').textContent=nm+' – '+document.getElementById('exCls').value;
+    start=Date.now();end=start+ +document.getElementById('exT').value*60000;tick();timer=setInterval(tick,1000);window.scrollTo(0,ebar.offsetTop-10);
+  };
+  function count(){var t=0,d=0;picked.forEach(function(s){s.querySelectorAll('.q').forEach(function(q){t++;if(q.querySelector('.opt.sel'))d++;});});return[d,t];}
+  function tick(){var s=Math.max(0,Math.round((end-Date.now())/1000));document.getElementById('exTime').textContent=String(s/60|0).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+    var c=count();document.getElementById('exDone').textContent='Đã làm '+c[0]+'/'+c[1];if(s<=0)finish(true);}
+  document.getElementById('exSub').onclick=function(){var c=count();if(c[0]<c[1]&&!this.dataset.c){this.dataset.c='1';this.textContent='Còn '+(c[1]-c[0])+' câu chưa làm – bấm lần nữa để nộp';return;}finish(false);};
+  function finish(auto){stop();var ok=0,tot=0,lines=[];
+    picked.forEach(function(s){var src=(s.querySelector('.src b')||{}).textContent||'';
+      s.querySelectorAll('.q').forEach(function(q){tot++;var k=q.dataset.key,sel=q.querySelector('.opt.sel'),a=sel?sel.dataset.l:'';
+        q.querySelectorAll('.opt').forEach(function(o){o.disabled=true;if(o.dataset.l===k)o.classList.add('right');else if(o===sel)o.classList.add('wrong');});
+        if(a===k)ok++;lines.push((q.querySelector('.qn')||{}).textContent+' ['+src+'] Chọn: '+(a||'(bỏ trống)')+' · Đáp án: '+k+' · '+(a===k?'ĐÚNG':'SAI'));});
+      s.classList.add('done');});
+    var sc=Math.round(ok/tot*100)/10,used=Math.round((Date.now()-start)/1000);
+    var txt=['KẾT QUẢ THI THỬ READING BLOCK 1, 2, 3','Biên soạn: GV Huệ Anh – THPT Gia Viễn B','Họ và tên: '+document.getElementById('exName').value,'Lớp: '+document.getElementById('exCls').value,'Ngày: '+new Date().toLocaleString('vi-VN'),'Thời gian làm: '+(used/60|0)+' phút '+(used%60)+' giây'+(auto?' (hết giờ, tự nộp)':''),'Điểm: '+sc+'/10 ('+ok+'/'+tot+' câu đúng)','','CHI TIẾT:'].concat(lines).join('\n');
+    ebar.style.display='none';res.style.display='block';
+    res.innerHTML='<div class="sc">'+sc+'/10</div><div>Đúng '+ok+'/'+tot+' câu'+(auto?' · Hết giờ, bài đã được tự nộp':'')+'. Đáp án và giải thích đã hiện dưới mỗi bài.</div>'+
+      '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="exDl" style="background:#1c2a7a;color:#fff;border:none;border-radius:4px;padding:7px 14px;font-weight:bold;cursor:pointer">Tải kết quả bài làm (.txt)</button><button type="button" id="exAgain" style="background:#fff;color:#1c2a7a;border:1px solid #1c2a7a;border-radius:4px;padding:7px 14px;font-weight:bold;cursor:pointer">Thi lại</button></div><textarea readonly>'+txt.replace(/</g,'&lt;')+'</textarea>';
+    document.getElementById('exDl').onclick=function(){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}));a.download='KetQua_Reading_'+document.getElementById('exName').value.replace(/\s+/g,'_')+'.txt';document.body.appendChild(a);a.click();a.remove();};
+    document.getElementById('exAgain').onclick=function(){setMode('e');document.body.classList.remove('exam');res.style.display='none';};
+    window.scrollTo(0,res.offsetTop-10);}
+})();
+</script>
+<!-- ===== Bảo vệ nội dung · hình mờ · chế độ giáo viên ===== -->
+<style>
+body{-webkit-user-select:none;-moz-user-select:none;user-select:none}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+#wm{position:fixed;inset:0;pointer-events:none;z-index:9999;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='220'><text x='10' y='130' transform='rotate(-25 180 110)' font-family='Arial' font-size='18' fill='%231c2a7a' fill-opacity='0.08'>GV Huệ Anh · THPT Gia Viễn B</text></svg>");background-repeat:repeat}
+#authorBar{font-family:Arial,Helvetica,sans-serif;text-align:center;font-size:13px;color:#5d6377;padding:18px 12px 26px;border-top:1px solid #dde0ea;margin-top:30px}
+#authorBar b{color:#1c2a7a}
+#tBtn{margin-left:8px;border:1px solid #c9cde0;background:#fff;color:#5d6377;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:12px;font-family:Arial}
+#tPanel{display:none;margin-top:10px}
+#tPanel a{display:inline-block;margin:4px;padding:7px 14px;background:#1c2a7a;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold}
+#tModal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:10000;font-family:Arial}
+#tModal .box{background:#fff;border-radius:8px;padding:20px;width:min(340px,90vw)}
+#tModal input{width:100%;padding:8px;margin:10px 0;border:1px solid #c9cde0;border-radius:4px;font-size:15px}
+#tModal button{padding:7px 14px;border-radius:4px;border:1px solid #1c2a7a;cursor:pointer;font-weight:bold}
+#tModal .ok{background:#1c2a7a;color:#fff}#tModal .no{background:#fff;color:#1c2a7a}
+#tErr{color:#c8102e;font-size:13px;min-height:18px}
+@media print{body *{display:none!important}body::after{content:"Tài liệu của GV Huệ Anh – THPT Gia Viễn B. Không được phép in.";display:block;font:20px Arial;text-align:center;margin-top:40vh}}
+</style>
+<div id="wm" aria-hidden="true"></div>
+<div id="authorBar">Biên soạn: <b>GV Huệ Anh</b> – Trường THPT Gia Viễn B · Tài liệu lưu hành nội bộ, không sao chép, không in ấn.
+<button id="tBtn" type="button">Dành cho giáo viên</button>
+<div id="tPanel"><a href="tai-lieu/BAI_TAP_BO_TRO_BLOCK_1_2_3.pdf" download>Tải PDF bài tập Block 1, 2, 3 (kèm đáp án)</a></div></div>
+<div id="tModal" role="dialog" aria-modal="true" aria-labelledby="tTitle"><div class="box"><b id="tTitle">Đăng nhập giáo viên</b><input id="tPass" type="password" placeholder="Mật khẩu giáo viên" autocomplete="off"><div id="tErr"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="no" id="tCancel" type="button">Hủy</button><button class="ok" id="tOk" type="button">Đăng nhập</button></div></div></div>
+<script>
+(function(){
+  var H='30e432b44af9452fe88fb9bdae7f8635d754e81b1207763f220a946938e23b60';
+  function isField(t){return t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT');}
+  ['copy','cut','contextmenu','dragstart','selectstart'].forEach(function(ev){
+    document.addEventListener(ev,function(e){if(window.__teacher&&ev!=='contextmenu')return;if(!isField(e.target))e.preventDefault();},true);});
+  document.addEventListener('keydown',function(e){
+    var k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['p','s','u','c','x','a'].indexOf(k)>-1&&!(isField(e.target)&&['c','x','a'].indexOf(k)>-1)){e.preventDefault();e.stopPropagation();}
+    if(k==='f12'||((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].indexOf(k)>-1)){e.preventDefault();}
+  },true);
+  window.addEventListener('beforeprint',function(){document.body.style.visibility='hidden';});
+  window.addEventListener('afterprint',function(){document.body.style.visibility='';});
+  var m=document.getElementById('tModal'),p=document.getElementById('tPass'),er=document.getElementById('tErr');
+  function unlock(){window.__teacher=true;document.getElementById('tPanel').style.display='block';document.getElementById('tBtn').textContent='Đã đăng nhập giáo viên';document.dispatchEvent(new Event('teacher-on'));}
+  try{if(sessionStorage.getItem('gv_ok')==='1')unlock();}catch(e){}
+  document.getElementById('tBtn').onclick=function(){if(window.__teacher)return;m.style.display='flex';p.value='';er.textContent='';p.focus();};
+  document.getElementById('tCancel').onclick=function(){m.style.display='none';};
+  async function check(){
+    try{var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p.value));
+      var h=Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');
+      if(h===H){try{sessionStorage.setItem('gv_ok','1');}catch(e){}m.style.display='none';unlock();}else{er.textContent='Mật khẩu chưa đúng.';}
+    }catch(e){er.textContent='Trình duyệt không hỗ trợ, hãy mở trang qua đường link GitHub.';}
+  }
+  document.getElementById('tOk').onclick=check;p.addEventListener('keydown',function(e){if(e.key==='Enter')check();});
+})();
+</script>
+
 </body>
 </html>

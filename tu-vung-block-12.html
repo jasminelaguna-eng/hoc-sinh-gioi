@@ -301,5 +301,56 @@ function Stats(){
 }
 renderCats();go();
 </script>
+<!-- ===== Bảo vệ nội dung · hình mờ · chế độ giáo viên ===== -->
+<style>
+body{-webkit-user-select:none;-moz-user-select:none;user-select:none}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+#wm{position:fixed;inset:0;pointer-events:none;z-index:9999;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='220'><text x='10' y='130' transform='rotate(-25 180 110)' font-family='Arial' font-size='18' fill='%231c2a7a' fill-opacity='0.08'>GV Huệ Anh · THPT Gia Viễn B</text></svg>");background-repeat:repeat}
+#authorBar{font-family:Arial,Helvetica,sans-serif;text-align:center;font-size:13px;color:#5d6377;padding:18px 12px 26px;border-top:1px solid #dde0ea;margin-top:30px}
+#authorBar b{color:#1c2a7a}
+#tBtn{margin-left:8px;border:1px solid #c9cde0;background:#fff;color:#5d6377;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:12px;font-family:Arial}
+#tPanel{display:none;margin-top:10px}
+#tPanel a{display:inline-block;margin:4px;padding:7px 14px;background:#1c2a7a;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold}
+#tModal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:10000;font-family:Arial}
+#tModal .box{background:#fff;border-radius:8px;padding:20px;width:min(340px,90vw)}
+#tModal input{width:100%;padding:8px;margin:10px 0;border:1px solid #c9cde0;border-radius:4px;font-size:15px}
+#tModal button{padding:7px 14px;border-radius:4px;border:1px solid #1c2a7a;cursor:pointer;font-weight:bold}
+#tModal .ok{background:#1c2a7a;color:#fff}#tModal .no{background:#fff;color:#1c2a7a}
+#tErr{color:#c8102e;font-size:13px;min-height:18px}
+@media print{body *{display:none!important}body::after{content:"Tài liệu của GV Huệ Anh – THPT Gia Viễn B. Không được phép in.";display:block;font:20px Arial;text-align:center;margin-top:40vh}}
+</style>
+<div id="wm" aria-hidden="true"></div>
+<div id="authorBar">Biên soạn: <b>GV Huệ Anh</b> – Trường THPT Gia Viễn B · Tài liệu lưu hành nội bộ, không sao chép, không in ấn.
+<button id="tBtn" type="button">Dành cho giáo viên</button>
+<div id="tPanel"><a href="tai-lieu/TU_VUNG_BLOCK_1_2.pdf" download>Tải PDF sổ từ vựng Block 1, 2 (1515 mục)</a></div></div>
+<div id="tModal" role="dialog" aria-modal="true" aria-labelledby="tTitle"><div class="box"><b id="tTitle">Đăng nhập giáo viên</b><input id="tPass" type="password" placeholder="Mật khẩu giáo viên" autocomplete="off"><div id="tErr"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="no" id="tCancel" type="button">Hủy</button><button class="ok" id="tOk" type="button">Đăng nhập</button></div></div></div>
+<script>
+(function(){
+  var H='30e432b44af9452fe88fb9bdae7f8635d754e81b1207763f220a946938e23b60';
+  function isField(t){return t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT');}
+  ['copy','cut','contextmenu','dragstart','selectstart'].forEach(function(ev){
+    document.addEventListener(ev,function(e){if(window.__teacher&&ev!=='contextmenu')return;if(!isField(e.target))e.preventDefault();},true);});
+  document.addEventListener('keydown',function(e){
+    var k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['p','s','u','c','x','a'].indexOf(k)>-1&&!(isField(e.target)&&['c','x','a'].indexOf(k)>-1)){e.preventDefault();e.stopPropagation();}
+    if(k==='f12'||((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].indexOf(k)>-1)){e.preventDefault();}
+  },true);
+  window.addEventListener('beforeprint',function(){document.body.style.visibility='hidden';});
+  window.addEventListener('afterprint',function(){document.body.style.visibility='';});
+  var m=document.getElementById('tModal'),p=document.getElementById('tPass'),er=document.getElementById('tErr');
+  function unlock(){window.__teacher=true;document.getElementById('tPanel').style.display='block';document.getElementById('tBtn').textContent='Đã đăng nhập giáo viên';document.dispatchEvent(new Event('teacher-on'));}
+  try{if(sessionStorage.getItem('gv_ok')==='1')unlock();}catch(e){}
+  document.getElementById('tBtn').onclick=function(){if(window.__teacher)return;m.style.display='flex';p.value='';er.textContent='';p.focus();};
+  document.getElementById('tCancel').onclick=function(){m.style.display='none';};
+  async function check(){
+    try{var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p.value));
+      var h=Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');
+      if(h===H){try{sessionStorage.setItem('gv_ok','1');}catch(e){}m.style.display='none';unlock();}else{er.textContent='Mật khẩu chưa đúng.';}
+    }catch(e){er.textContent='Trình duyệt không hỗ trợ, hãy mở trang qua đường link GitHub.';}
+  }
+  document.getElementById('tOk').onclick=check;p.addEventListener('keydown',function(e){if(e.key==='Enter')check();});
+})();
+</script>
+
 </body>
 </html>
