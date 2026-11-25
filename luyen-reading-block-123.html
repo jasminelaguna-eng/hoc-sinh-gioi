@@ -93,7 +93,7 @@ select,input[type=number]{border:1px solid var(--line);background:var(--paper);c
 .dual{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:16px;align-items:start}
 .pane{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
 .pane.read{position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto}
-.instr{font-family:var(--ui);font-weight:700;font-size:13.5px;margin:0 0 10px;color:var(--muted)}
+.instr{font-family:var(--ui);font-weight:800;font-size:14.5px;font-style:italic;margin:0 0 10px;color:var(--ink)}
 .ptitle{font-family:var(--serif);font-weight:700;font-size:19px;text-align:center;margin:0 0 10px}
 .passage p{font-family:var(--serif);font-size:17px;line-height:1.75;margin:0 0 12px;text-align:justify}
 .blank{font-family:var(--ui);font-weight:800;color:var(--blank);cursor:pointer;border-radius:5px;padding:0 3px;white-space:nowrap}
@@ -119,8 +119,8 @@ select,input[type=number]{border:1px solid var(--line);background:var(--paper);c
 .opt.right{border-color:var(--good);background:var(--good-soft)}
 .opt.right .L{background:var(--good);color:#fff}
 .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
-.opt.wrong .L{background:var(--bad);color:#fff}
-.opt.key{border-style:dashed;border-color:var(--good)}
+.opt.wrong .L{background:var(--bad);color:#fff} .opt.key{border-style:dashed;border-color:var(--good)}
+
 .opt{cursor:pointer}
 .opt.dis{cursor:default}
 .hlz,.opt .ot{-webkit-user-select:text;user-select:text}
@@ -819,5 +819,8 @@ body.is-teacher .rb3-wm{display:none}
   try{ const s=JSON.parse(localStorage.getItem("rbhsg-auth")||"null"); if(s&&s.code&&!isT()) setWM(s); }catch(e){}
 })();
 </script>
+<div id="siteSwitch" style="position:fixed;left:12px;bottom:12px;z-index:9000;display:flex;gap:6px;font-family:Arial,Helvetica,sans-serif;font-size:13px">
+<a href="index.html" style="background:#1c2a7a;color:#fff;text-decoration:none;padding:8px 12px;border-radius:999px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,.2)">⌂ Trang chủ</a>
+<a href="tu-vung-block-12.html" style="background:#c8102e;color:#fff;text-decoration:none;padding:8px 12px;border-radius:999px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,.2)">Luyện vốn từ Block 1, 2 →</a></div>
 </body>
 </html>

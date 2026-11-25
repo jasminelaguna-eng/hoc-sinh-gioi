@@ -90,7 +90,7 @@ textarea#txtOut{width:100%;height:140px;margin-top:8px;font-family:var(--font);f
 </head>
 <body>
 <div style="background:#111a5c;font-family:Arial,Helvetica,sans-serif;font-size:14px;padding:8px 16px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">
-<a href="index.html" style="color:#fff;font-weight:bold;text-decoration:none">Trang chủ HSG</a>
+<a href="index.html" style="color:#fff;font-weight:bold;text-decoration:none">Trang chủ</a>
 <a href="luyen-reading-block-123.html" style="color:#cfd6ff;text-decoration:none">Reading Block 1, 2, 3 thực chiến</a>
 <a href="tu-vung-block-12.html" style="color:#cfd6ff;text-decoration:none">Luyện vốn từ Block 1, 2</a></div>
 <header class="top">
@@ -105,15 +105,6 @@ textarea#txtOut{width:100%;height:140px;margin-top:8px;font-family:var(--font);f
   </div>
   <nav class="cats" id="cats" aria-label="Nhóm từ vựng"></nav>
   <div class="filters">
-    <label for="src">Nguồn:</label>
-    <select id="src">
-      <option value="all">Tất cả nguồn</option>
-      <option value="orig">Trích từ đề gốc (PT1, Test 01–12)</option>
-      <option value="new">Từ các đề đã biên tập (bản mới)</option>
-      <option value="moon">60 đề minh họa TN THPT 2026 (Moon)</option>
-      <option value="teacher">Tài liệu Confusing Words (cô cung cấp, 2 phần)</option>
-      <option value="extra">Bổ sung mở rộng</option>
-    </select>
     <label for="stt">Trạng thái:</label>
     <select id="stt">
       <option value="all">Tất cả</option>
@@ -160,7 +151,7 @@ try{const p=JSON.parse(localStorage.getItem('vocab12_me')||'{}');if(p.n)stuName.
 // ---- state
 let curCat='all',mode='dict';
 function pool(){
-  const s=src.value,t=stt.value;
+  const s="all",t=stt.value;
   return ITEMS.filter(it=>(curCat==='all'||it.c===curCat)&&(s==='all'||srcType(it.s)===s)&&
     (t==='all'||(t==='done'&&isDone(it.id))||(t==='todo'&&!isDone(it.id))||(t==='weak'&&isWeak(it.id))));
 }
@@ -173,7 +164,7 @@ function renderCats(){
   cats.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.c===curCat);b.onclick=()=>{curCat=b.dataset.c;renderCats();go();};});
 }
 document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>{if(examTimer&&!confirm2())return;mode=b.dataset.m;document.querySelectorAll('.modes button').forEach(x=>x.classList.toggle('on',x===b));go();});
-src.onchange=stt.onchange=()=>go();
+stt.onchange=()=>go();
 function confirm2(){stopExam();return true;}
 function go(){updProg();({dict:Dict,flash:Flash,fill:()=>Quiz('fill'),mean:()=>Quiz('mean'),rev:()=>Quiz('rev'),exam:ExamIntro,stat:Stats})[mode]();}
 // ---- dictionary
@@ -193,7 +184,7 @@ function Flash(){
   fl={list:shuffle(pool()),i:0,back:false};
   const draw=()=>{if(!fl.list.length){panel.innerHTML='<p>Không có mục nào trong bộ lọc hiện tại.</p>';return;}
     const it=fl.list[fl.i];
-    panel.innerHTML='<p class="hint">Bấm vào thẻ (hoặc phím Space) để lật. Phím ← → để chuyển thẻ.</p><div class="qhead"><span>Thẻ '+(fl.i+1)+'/'+fl.list.length+' · '+esc(CAT[it.c])+'</span><span class="chip src">'+esc(SRCNAME(it.s))+'</span></div><div class="card" id="card" tabindex="0">'+
+    panel.innerHTML='<p class="hint">Bấm vào thẻ (hoặc phím Space) để lật. Phím ← → để chuyển thẻ.</p><div class="qhead"><span>Thẻ '+(fl.i+1)+'/'+fl.list.length+' · '+esc(CAT[it.c])+'</span></div><div class="card" id="card" tabindex="0">'+
     (fl.back?'<div class="term">'+esc(it.t)+(it.v?' <span class="vs">≠ '+esc(it.v.split(":")[0])+'</span>':'')+'</div><div class="mean">'+esc(meanTxt(it))+'</div>'+(it.st?'<div class="ex"><b>Cấu trúc:</b> '+esc(it.t)+' '+esc(it.st)+'</div>':'')+'<div class="ex">'+fmtEx(it.x)+'</div>':'<div class="term">'+esc(it.t)+'</div><div class="tap">Bấm để xem nghĩa và ví dụ</div>')+
     '</div><div class="row center"><button class="btn ghost" id="prev">← Trước</button><button class="btn red" id="no">Chưa thuộc</button><button class="btn" id="yes" style="background:var(--ok);border-color:var(--ok)">Đã thuộc</button><button class="btn ghost" id="next">Sau →</button><button class="btn ghost" id="mix">Trộn lại</button></div>';
     card.onclick=()=>{fl.back=!fl.back;draw();};
@@ -241,7 +232,7 @@ function Quiz(type){
       if(panel.querySelector('.opt.right'))return;
       const ok=b.dataset.v===q.key;mark(q.it.id,ok);if(ok)right++;else wrong.push(q.it);
       panel.querySelectorAll('.opt').forEach(x=>{if(x.dataset.v===q.key)x.classList.add('right');else if(x===b)x.classList.add('wrong');x.disabled=true;});
-      fbx.innerHTML='<div class="fb '+(ok?'good':'badf')+'"><b>'+(ok?'Chính xác!':'Chưa đúng.')+'</b> <b>'+esc(q.it.t)+'</b>: '+esc(meanTxt(q.it))+(q.it.st?'<br><b>Cấu trúc:</b> '+esc(q.it.t)+' '+esc(q.it.st):'')+'<br>'+fmtEx(q.it.x)+'<br><span class="chip src">'+esc(SRCNAME(q.it.s))+'</span></div><div class="row" style="margin-top:10px"><button class="btn" id="nx">'+(i+1<qs.length?'Câu tiếp theo →':'Xem kết quả')+'</button></div>';
+      fbx.innerHTML='<div class="fb '+(ok?'good':'badf')+'"><b>'+(ok?'Chính xác!':'Chưa đúng.')+'</b> <b>'+esc(q.it.t)+'</b>: '+esc(meanTxt(q.it))+(q.it.st?'<br><b>Cấu trúc:</b> '+esc(q.it.t)+' '+esc(q.it.st):'')+'<br>'+fmtEx(q.it.x)+'<br></div><div class="row" style="margin-top:10px"><button class="btn" id="nx">'+(i+1<qs.length?'Câu tiếp theo →':'Xem kết quả')+'</button></div>';
       nx.onclick=()=>{i++;draw();};nx.focus();});
   };draw();
 }
@@ -351,5 +342,8 @@ input,textarea,select{-webkit-user-select:text;user-select:text}
 })();
 </script>
 
+<div id="siteSwitch" style="position:fixed;left:12px;bottom:12px;z-index:9000;display:flex;gap:6px;font-family:Arial,Helvetica,sans-serif;font-size:13px">
+<a href="index.html" style="background:#1c2a7a;color:#fff;text-decoration:none;padding:8px 12px;border-radius:999px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,.2)">⌂ Trang chủ</a>
+<a href="luyen-reading-block-123.html" style="background:#c8102e;color:#fff;text-decoration:none;padding:8px 12px;border-radius:999px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,.2)">Reading Block 1, 2, 3 thực chiến →</a></div>
 </body>
 </html>
